@@ -12,10 +12,8 @@ class DatabaseService:
         db_user = User(username=username, hashed_password=hashed_password)
         self.session.add(db_user)
         return db_user
-    
-    async def delete_user(self, user_id: UUID):
-        # query_files = delete(File).where(File.owner_id == user_id)
-        # await self.session.execute(query_files)
+
+    async def delete_user(self, user_id: UUID) -> bool:
         query_user = delete(User).where(User.id == user_id)
         result = await self.session.execute(query_user)
         return result.rowcount > 0
@@ -116,6 +114,6 @@ class DatabaseService:
 
     async def commit(self):
         await self.session.commit()
-    
+
     async def rollback(self):
         await self.session.rollback()

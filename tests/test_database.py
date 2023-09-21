@@ -11,6 +11,7 @@ from uuid import uuid4
 async def reset_db():
     await reset_models()
 
+
 @pytest_asyncio.fixture
 async def user():
     async with get_db_service() as service:
@@ -18,6 +19,18 @@ async def user():
         await service.commit()
         yield user
         res = await service.delete_user(user.id)
+        await service.commit()
+
+
+@pytest_asyncio.fixture
+async def file():
+    async with get_db_service() as service:
+        user = await service.create_user("user", "password")
+        file = await service.create_file("file1", user.id, "a,b,c")
+        await service.commit()
+        yield file
+        res = await service.delete_file(user.id)
+        await service.delete_user(user.id)
         await service.commit()
 
 
@@ -65,3 +78,21 @@ class TestDatabaseService:
             with pytest.raises(IntegrityError):
                 file = await service.create_file("file1", uuid4(), "a,b,c")
                 await service.commit()
+
+    @pytest.mark.asyncio
+    async def test_data(self, file):
+        async with get_db_service() as service:
+            table_data = {
+                'a': ['x', 'a', 'dd'],
+                'b': ['y', 'b', 'ee'],
+                'c': ['z', 'c', 'ff']
+            }
+            for key, value in table_data.items():
+                for val in value:
+                    await service.create_data(file.id, key, 0, val)
+            await service.commit()
+            data = await service.get_data(file.id)
+            for i, item in enumerate(data):
+                assert item.file_id == file.id
+                assert item.value == table_data["a" if i%3==0 else "b" if i%3==1 else "c"][i//3]
+                
