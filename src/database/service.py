@@ -1,5 +1,5 @@
 from uuid import UUID
-from sqlalchemy import and_, asc, delete, desc, exists, func, or_, select, update
+from sqlalchemy import and_, delete, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from .models import FileAccess, User, File, Data
 
@@ -40,7 +40,6 @@ class DatabaseService:
         self,
         file_id: UUID,
         filters: dict[str, str] = None,
-        sort: dict[str, str] = None,
         offset: int = 0,
         limit: int = 100,
     ) -> list[Data]:
@@ -51,8 +50,6 @@ class DatabaseService:
                 Data.row_number >= offset,
                 Data.row_number < offset + limit,
             )
-            .offset(offset)
-            .limit(limit)
         )
 
         if filters:
@@ -74,17 +71,6 @@ class DatabaseService:
                 query = query.where(
                     exists().where(and_(Data.row_number == subquery.c.row_number))
                 )
-
-        if sort:
-            sort_conditions = []
-            for column_name, sort_order in sort.items():
-                sort_func = asc if sort_order == "asc" else desc
-                try:
-                    sort_conditions.append(sort_func(getattr(Data, column_name)))
-                except AttributeError:
-                    print(f"Attribute not found {column_name}")
-            if sort_conditions:
-                query = query.order_by(*sort_conditions)
 
         result = await self.session.execute(query)
         return list(result.scalars().all())

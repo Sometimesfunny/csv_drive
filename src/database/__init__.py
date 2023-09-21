@@ -5,12 +5,15 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from .models import Base
 from .service import DatabaseService
+from ..errors import NoCredentialsException
 from dotenv import load_dotenv
 import os
 
 
 load_dotenv()
 
+if not (os.getenv('DB_USER') and os.getenv('DB_PASS') and os.getenv('DB_IP') and os.getenv('DB_NAME')):
+    raise NoCredentialsException
 
 DATABASE_URL = f"postgresql+asyncpg://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_IP')}/{os.getenv('DB_NAME')}"
 
