@@ -12,4 +12,3 @@ def event_loop():
     loop = policy.new_event_loop()
     yield loop
     loop.close()
-    
