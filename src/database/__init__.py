@@ -25,7 +25,7 @@ async def reset_models():
         await conn.run_sync(Base.metadata.create_all)
 
 
-@asynccontextmanager
-async def get_db_service() -> AsyncIterator[DatabaseService]:
+# @asynccontextmanager
+async def get_db_service() -> DatabaseService:
     async with async_session() as session:
         yield DatabaseService(session)
