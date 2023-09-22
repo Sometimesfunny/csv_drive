@@ -14,6 +14,8 @@ class DatabaseService:
         return db_user
 
     async def delete_user(self, user_id: UUID) -> bool:
+        query_file_access = delete(FileAccess).where(FileAccess.user_id == user_id)
+        await self.session.execute(query_file_access)
         query_user = delete(User).where(User.id == user_id)
         result = await self.session.execute(query_user)
         return result.rowcount > 0
@@ -97,6 +99,11 @@ class DatabaseService:
         db_file_access = FileAccess(file_id=file_id, user_id=user_id)
         self.session.add(db_file_access)
         return db_file_access
+
+    async def has_access(self, file_id: UUID, user_id: UUID) -> bool:
+        query = select(FileAccess).where(FileAccess.file_id == file_id, FileAccess.user_id == user_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none() is not None
 
     async def commit(self):
         await self.session.commit()

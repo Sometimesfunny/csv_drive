@@ -17,7 +17,7 @@ async def reset_db():
 @pytest_asyncio.fixture
 async def user():
     async with get_db_service() as service:
-        user = await service.create_user("user", "password")
+        user = await service.create_user(f"user_{uuid4()}", "password")
         await service.commit()
         yield user
         res = await service.delete_user(user.id)
@@ -86,9 +86,9 @@ class TestDatabaseService:
     async def test_data(self, file):
         async with get_db_service() as service:
             table_data = {
-                'a': ['x', 'a', 'dd', 'x', '3', '3'],
-                'b': ['y', 'b', 'ee', 'f', '2', '1'],
-                'c': ['z', 'c', 'ff', 'h', '1', '2']
+                "a": ["x", "a", "dd", "x", "3", "3"],
+                "b": ["y", "b", "ee", "f", "2", "1"],
+                "c": ["z", "c", "ff", "h", "1", "2"],
             }
             for key, value in table_data.items():
                 for i, val in enumerate(value):
@@ -100,17 +100,11 @@ class TestDatabaseService:
                 assert item.file_id == file.id
                 got_data[item.column_name].append(item.value)
             assert table_data == got_data
-            data = await service.get_data(file.id, {
-                'a': 'x'
-            })
+            data = await service.get_data(file.id, {"a": "x"})
             got_data = defaultdict(list)
             for item in data:
                 got_data[item.column_name].append(item.value)
-            assert got_data == {
-                'a': ['x', 'x'],
-                'b': ['y', 'f'],
-                'c': ['z', 'h']
-            }
+            assert got_data == {"a": ["x", "x"], "b": ["y", "f"], "c": ["z", "h"]}
             data = await service.get_data(file.id, {})
             got_data = defaultdict(list)
             for item in data:
@@ -119,7 +113,15 @@ class TestDatabaseService:
             assert await service.delete_file(file.id) is True
             await service.commit()
             assert await service.get_files(file.owner_id) == []
-    
+
     @pytest.mark.asyncio
-    async def test_access(self, file):
-        pass
+    async def test_access(self, file, user):
+        async with get_db_service() as service:
+            file_access = await service.create_file_access(file.id, user.id)
+            await service.commit()
+            assert file_access.file_id == file.id
+            assert file_access.user_id == user.id
+            files = await service.get_files(user.id)
+            assert files[0].id == file.id
+            has_access = await service.has_access(file.id, user.id)
+            assert has_access is True
