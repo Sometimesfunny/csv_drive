@@ -4,3 +4,5 @@ fastapi==0.103.1
 python-dotenv
 pytest
 pytest-asyncio
+python-jose
+passlib
