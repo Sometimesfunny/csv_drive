@@ -29,6 +29,11 @@ class DatabaseService:
         db_file = File(name=name, owner_id=owner_id, column_order=column_order)
         self.session.add(db_file)
         return db_file
+    
+    async def get_file(self, file_id: UUID):
+        query = select(File).where(File.id == file_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
 
     async def create_data(
         self,

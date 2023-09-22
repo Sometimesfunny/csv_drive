@@ -18,3 +18,12 @@ class User(BaseModel):
 
     class Config:
         from_attributes = True
+
+class File(BaseModel):
+    id: UUID
+    name: str
+    owner_id: UUID
+    column_order: str
+
+    class Config:
+        from_attributes = True

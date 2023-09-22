@@ -29,3 +29,8 @@ async def reset_models():
 async def get_db_service() -> DatabaseService:
     async with async_session() as session:
         yield DatabaseService(session)
+
+@asynccontextmanager
+async def test_db_service() -> AsyncIterator[DatabaseService]:
+    async with async_session() as session:
+        yield DatabaseService(session)

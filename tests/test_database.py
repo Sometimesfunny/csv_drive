@@ -2,7 +2,7 @@ from collections import defaultdict
 import pprint
 import pytest
 import pytest_asyncio
-from src.database import reset_models, get_db_service
+from src.database import reset_models, test_db_service
 from contextlib import nullcontext
 
 from sqlalchemy.exc import IntegrityError, DBAPIError
@@ -16,7 +16,7 @@ async def reset_db():
 
 @pytest_asyncio.fixture
 async def user():
-    async with get_db_service() as service:
+    async with test_db_service() as service:
         user = await service.create_user(f"user_{uuid4()}", "password")
         await service.commit()
         yield user
@@ -26,7 +26,7 @@ async def user():
 
 @pytest_asyncio.fixture
 async def file():
-    async with get_db_service() as service:
+    async with test_db_service() as service:
         user = await service.create_user("user", "password")
         file = await service.create_file("file1", user.id, "a,b,c")
         await service.commit()
@@ -50,7 +50,7 @@ class TestDatabaseService:
         ],
     )
     async def test_create_user(self, username, hashed_password, context):
-        async with get_db_service() as service:
+        async with test_db_service() as service:
             with context:
                 user = await service.create_user(username, hashed_password)
                 assert user.username == username
@@ -67,7 +67,7 @@ class TestDatabaseService:
         ],
     )
     async def test_create_file_user(self, filename, columns_order, context, user):
-        async with get_db_service() as service:
+        async with test_db_service() as service:
             with context:
                 file = await service.create_file(filename, user.id, columns_order)
                 await service.commit()
@@ -77,14 +77,14 @@ class TestDatabaseService:
 
     @pytest.mark.asyncio
     async def test_create_file_nouser(self):
-        async with get_db_service() as service:
+        async with test_db_service() as service:
             with pytest.raises(IntegrityError):
                 file = await service.create_file("file1", uuid4(), "a,b,c")
                 await service.commit()
 
     @pytest.mark.asyncio
     async def test_data(self, file):
-        async with get_db_service() as service:
+        async with test_db_service() as service:
             table_data = {
                 "a": ["x", "a", "dd", "x", "3", "3"],
                 "b": ["y", "b", "ee", "f", "2", "1"],
@@ -116,7 +116,7 @@ class TestDatabaseService:
 
     @pytest.mark.asyncio
     async def test_access(self, file, user):
-        async with get_db_service() as service:
+        async with test_db_service() as service:
             file_access = await service.create_file_access(file.id, user.id)
             await service.commit()
             assert file_access.file_id == file.id

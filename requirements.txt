@@ -6,3 +6,4 @@ pytest
 pytest-asyncio
 python-jose
 passlib
+python-multipart
