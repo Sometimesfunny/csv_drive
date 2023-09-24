@@ -52,15 +52,11 @@ class DatabaseService:
         self,
         file_id: UUID,
         filters: dict[str, str] = None,
-        offset: int = 0,
-        limit: int = 100,
     ) -> list[Data]:
         query = (
             select(Data)
             .where(
-                Data.file_id == file_id,
-                Data.row_number >= offset,
-                Data.row_number < offset + limit,
+                Data.file_id == file_id
             )
         )
 
@@ -69,7 +65,7 @@ class DatabaseService:
             for column_name, value in filters.items():
                 try:
                     filter_conditions.append(
-                        and_(Data.column_name == column_name, Data.value == value)
+                        and_(Data.column_name == column_name, Data.value.ilike(f"%{value}%"))
                     )
                 except AttributeError:
                     print(f"Attribute not found {column_name}")
@@ -109,6 +105,16 @@ class DatabaseService:
         db_file_access = FileAccess(file_id=file_id, user_id=user_id)
         self.session.add(db_file_access)
         return db_file_access
+
+    async def delete_file_access(self, file_id: UUID, user_id: UUID):
+        query = delete(FileAccess).where(FileAccess.id == file_id, FileAccess.user_id == user_id)
+        result = await self.session.execute(query)
+        return result.rowcount > 0
+    
+    async def get_file_access(self, file_id: UUID):
+        query = select(FileAccess.file_id, FileAccess.user_id, User.username).join(User, User.id == FileAccess.user_id).where(FileAccess.file_id)
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
 
     async def has_access(self, file_id: UUID, user_id: UUID) -> bool:
         query = select(FileAccess).where(FileAccess.file_id == file_id, FileAccess.user_id == user_id)

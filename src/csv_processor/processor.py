@@ -1,6 +1,7 @@
 import codecs
 import csv
 from typing import IO
+from ..errors import CSVValidationError
 
 
 class CSVProcessor:
@@ -12,7 +13,11 @@ class CSVProcessor:
         self.reader = csv.DictReader(codecs.iterdecode(file, "utf-8"), dialect=self.get_dialect(sample_string))
 
     def get_dialect(self, sample_string):
-        dialect = csv.Sniffer().sniff(sample_string, delimiters=";,")
+        try:
+            dialect = csv.Sniffer().sniff(sample_string, delimiters=";,")
+        except csv.Error as e:
+            if str(e) == "Could not determine delimiter":
+                raise CSVValidationError
         return dialect
 
     @property

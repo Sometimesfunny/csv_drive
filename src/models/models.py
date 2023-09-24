@@ -27,3 +27,9 @@ class File(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class FileAccess(BaseModel):
+    file_id: UUID
+    user_id: UUID
+    username: UUID

@@ -1,6 +1,6 @@
 class NoCredentialsException(Exception):
     def __init__(self) -> None:
-        super().__init__("Not enough database credentials provided.")
+        super().__init__("Not enough database credentials provided")
 
 
 class UserAlreadyExists(Exception):
@@ -11,3 +11,8 @@ class UserAlreadyExists(Exception):
 class TokenExpiredException(Exception):
     def __init__(self) -> None:
         super().__init__("Token expired, please create new one")
+
+
+class CSVValidationError(Exception):
+    def __init__(self) -> None:
+        super().__init__("Could not validate file")

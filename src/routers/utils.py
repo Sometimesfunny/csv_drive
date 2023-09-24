@@ -1,5 +1,3 @@
-
-
 from fastapi import Depends, HTTPException, status
 from src.auth.jwt import decode_access_token
 from src.database import get_db_service
@@ -36,3 +34,20 @@ async def get_current_user(
     if user_db:
         return User.model_validate(user_db)
     raise credentials_exception
+
+
+def sort_table(table: dict[str, list], sort_order: dict[str, str]) -> dict[str, list]:
+    rows = [dict(zip(table, row)) for row in zip(*table.values())]
+
+    def sort_key(row):
+        return tuple(
+            row[column] if order == "asc" else -row[column]
+            for column, order in sort_order.items()
+        )
+
+    sorted_rows = sorted(rows, key=sort_key)
+    sorted_table = {column: [] for column in table.keys()}
+    for row in sorted_rows:
+        for column, value in row.items():
+            sorted_table[column].append(value)
+    return sorted_table
